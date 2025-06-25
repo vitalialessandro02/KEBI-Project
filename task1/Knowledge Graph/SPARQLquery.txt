@@ -1,0 +1,66 @@
+PREFIX : <http://example.org/restaurant-menu#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?meal
+WHERE {
+  ?meal :hasDietType :Carnivore .
+  ?meal :hasCaloriesValue ?calorieNode .
+  ?calorieNode :value ?calValue .
+  FILTER(xsd:integer(?calValue) < 800)
+  FILTER NOT EXISTS {
+    ?meal :hasAllergen ?userAllergen .
+    VALUES ?userAllergen {  :Lactose  }  
+  }
+}
+
+
+
+
+PREFIX rm: <http://example.org/restaurant-menu#>
+
+# List all vegetarian dishes
+SELECT ?dish
+WHERE {
+  ?dish rm:hasDietType rm:Vegetarian .
+}
+
+
+
+# Find dishes with the allergen "Lactose"
+PREFIX rm: <http://example.org/restaurant-menu#>
+
+SELECT ?dish
+WHERE {
+  ?dish rm:hasAllergen rm:Lactose .
+}
+
+
+#Show the ingredients of "PenneAllArrabbiata"
+PREFIX rm: <http://example.org/restaurant-menu#>
+
+SELECT ?ingredient
+WHERE {
+  rm:PenneAllArrabbiata rm:hasIngredient ?ingredient .
+}
+
+
+
+#Retrieve dishes with less than 400 calories 
+PREFIX rm: <http://example.org/restaurant-menu#>
+
+SELECT ?dish ?cal
+WHERE {
+  ?dish rm:hasCaloriesValue ?cal .
+  FILTER(xsd:integer(STRAFTER(STR(?cal), "#")) < 400)
+}
+
+
+
+
+#Find all dishes and their diet type (if specified)
+PREFIX rm: <http://example.org/restaurant-menu#>
+
+SELECT ?dish ?diet
+WHERE {
+  ?dish rm:hasDietType ?diet .
+}

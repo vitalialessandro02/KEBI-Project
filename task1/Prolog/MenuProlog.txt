@@ -1,0 +1,110 @@
+% Menu Items Facts
+% dish(Name, Ingredients, DietTypes, Calories, Allergens)
+dish('Spaghetti alla Carbonara', ['pasta', 'eggs', 'bacon', 'cheese'], ['Carnivore'], 650, ['Gluten', 'Lactose', 'Eggs']).
+dish('Pizza Margherita', ['dough', 'tomato sauce', 'mozzarella', 'basil'], ['Vegetarian', 'Carnivore'], 850, ['Gluten', 'Lactose']).
+dish('Penne all\'Arrabbiata', ['pasta', 'tomato sauce', 'chili pepper', 'garlic'], ['Vegan', 'Vegetarian', 'Carnivore'], 450, ['Gluten']).
+dish('Bistecca alla Fiorentina', ['beef'], ['Carnivore'], 550, []).
+dish('Insalata Caprese', ['tomato', 'mozzarella', 'basil', 'oil'], ['Vegetarian', 'Carnivore'], 300, ['Lactose']).
+dish('Mushroom Risotto', ['rice', 'mushrooms', 'vegetable broth', 'parmesan'], ['Vegetarian', 'Carnivore'], 450, ['Lactose']).
+dish('Pasta with Tomato Sauce', ['pasta', 'tomato sauce', 'basil'], ['Vegan', 'Vegetarian', 'Carnivore'], 380, ['Gluten']).
+dish('Lasagna', ['pasta', 'ragù', 'béchamel', 'parmesan'], ['Carnivore'], 750, ['Gluten', 'Lactose']).
+dish('Tiramisu', ['ladyfingers', 'mascarpone', 'coffee', 'cocoa'], ['Vegetarian', 'Carnivore'], 420, ['Gluten', 'Lactose', 'Eggs']).
+dish('Mixed Salad', ['lettuce', 'tomato', 'carrots', 'cucumbers'], ['Vegan', 'Vegetarian', 'Carnivore'], 120, []).
+dish('Spaghetti with Tuna', ['pasta', 'tuna', 'garlic', 'oil'], ['Carnivore'], 520, ['Gluten', 'Fish']).
+dish('Bruschetta', ['bread', 'tomato', 'garlic', 'basil'], ['Vegan', 'Vegetarian', 'Carnivore'], 180, ['Gluten']).
+dish('Eggplant Parmigiana', ['eggplant', 'tomato', 'mozzarella', 'parmesan'], ['Vegetarian', 'Carnivore'], 380, ['Lactose']).
+dish('Gnocchi with Pesto', ['gnocchi', 'basil', 'pine nuts', 'parmesan', 'garlic'], ['Vegetarian', 'Carnivore'], 550, ['Gluten', 'Lactose', 'Nuts']).
+dish('Four Cheese Pizza', ['dough', 'mozzarella', 'gorgonzola', 'parmesan', 'fontina'], ['Vegetarian', 'Carnivore'], 950, ['Gluten', 'Lactose']).
+
+% Ingredients Facts ì
+% ingredient(Name, Type)
+ingredient('pasta', 'carbohydrate').
+ingredient('dough', 'carbohydrate').
+ingredient('rice', 'carbohydrate').
+ingredient('eggs', 'protein').
+ingredient('bacon', 'meat').
+ingredient('cheese', 'dairy').
+ingredient('mozzarella', 'dairy').
+ingredient('parmesan', 'dairy').
+ingredient('gorgonzola', 'dairy').
+ingredient('fontina', 'dairy').
+ingredient('tomato sauce', 'vegetable').
+ingredient('tomato', 'vegetable').
+ingredient('basil', 'vegetable').
+ingredient('chili pepper', 'vegetable').
+ingredient('garlic', 'vegetable').
+ingredient('mushrooms', 'vegetable').
+ingredient('beef', 'meat').
+ingredient('tuna', 'fish').
+ingredient('oil', 'condiment').
+ingredient('vegetable broth', 'condiment').
+ingredient('ragù', 'meat').
+ingredient('béchamel', 'dairy').
+ingredient('lettuce', 'vegetable').
+ingredient('carrots', 'vegetable').
+ingredient('cucumbers', 'vegetable').
+ingredient('bread', 'carbohydrate').
+ingredient('eggplant', 'vegetable').
+ingredient('gnocchi', 'carbohydrate').
+ingredient('pine nuts', 'nuts').
+ingredient('ladyfingers', 'carbohydrate').
+ingredient('mascarpone', 'dairy').
+ingredient('coffee', 'beverage').
+ingredient('cocoa', 'condiment').
+
+% Diet Compatibility Rules
+diet_compatible(DishName, 'Carnivore') :- 
+    dish(DishName, _, DietTypes, _, _), 
+    member('Carnivore', DietTypes).
+
+diet_compatible(DishName, 'Vegetarian') :- 
+    dish(DishName, _, DietTypes, _, _), 
+    (member('Vegetarian', DietTypes) ; member('Vegan', DietTypes)).
+
+diet_compatible(DishName, 'Vegan') :- 
+    dish(DishName, _, DietTypes, _, _), 
+    member('Vegan', DietTypes).
+
+allergy_safe(DishName, GuestAllergies) :- 
+    dish(DishName, _, _, _, DishAllergens), 
+    forall(member(Allergen, GuestAllergies),
+           \+ member(Allergen, DishAllergens)).
+
+
+meets_calorie_limit(DishName, CalorieLimit) :- 
+    (CalorieLimit =< 0 ; CalorieLimit = null), 
+    dish(DishName, _, _, _, _).
+
+meets_calorie_limit(DishName, CalorieLimit) :- 
+    CalorieLimit > 0, 
+    dish(DishName, _, _, Calories, _), 
+    Calories =< CalorieLimit.
+
+
+recommend_dish(DishName, DietType, Allergies, CalorieLimit) :- 
+    diet_compatible(DishName, DietType), 
+    allergy_safe(DishName, Allergies), 
+    meets_calorie_limit(DishName, CalorieLimit).
+
+get_all_recommended_dishes(DietType, Allergies, CalorieLimit, RecommendedDishes) :-
+    findall(DishName, recommend_dish(DishName, DietType, Allergies, CalorieLimit), DishList),
+    sort(DishList, RecommendedDishes).
+
+personalized_menu(DietType, CalorieLimit, AllergiesList, RecommendedDishes) :-
+    get_all_recommended_dishes(DietType, AllergiesList, CalorieLimit, RecommendedDishes),
+    format('~nPersonalized menu for ~w diet with ~w calorie limit and allergies to ~w:~n', [DietType, CalorieLimit, AllergiesList]),
+    print_dishes(RecommendedDishes).
+
+
+print_dishes([]) :- 
+    write('No suitable dishes found based on your criteria.'), nl.
+print_dishes(Dishes) :- 
+    write('Recommended dishes:'), nl,
+    print_dish_list(Dishes, 1).
+
+print_dish_list([], _).
+print_dish_list([Dish|Rest], N) :-
+    dish(Dish, _, _, Calories, Allergens),
+    format('~w. ~w (~w calories) [Allergens: ~w]~n', [N, Dish, Calories, Allergens]),
+    N1 is N + 1,
+    print_dish_list(Rest, N1).

@@ -1,0 +1,98 @@
+PREFIX : <http://example.org/restaurant-menu#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+#This query returns all the dishes in the menu with their associated diet types, calories and allergens.
+
+
+SELECT ?dishName ?calorieCategory ?dietTypes ?allergens ?calories
+WHERE {
+  :Menu :hasMeal ?dish .
+  BIND(STRAFTER(STR(?dish), "#") AS ?dishName)
+  
+  ?dish :hasCaloriesValue ?calorie .
+  ?calorie :value ?calories .
+  
+  OPTIONAL {
+    SELECT ?dish (GROUP_CONCAT(?dietType; separator=", ") 
+    AS ?dietTypes)
+    WHERE {
+      ?dish :hasDietType ?diet .
+      BIND(STRAFTER(STR(?diet), "#") AS ?dietType)
+    }
+    GROUP BY ?dish
+  }
+  
+  OPTIONAL {
+    SELECT ?dish (GROUP_CONCAT(?allergenType; separator=", ") 
+    AS ?allergens)
+    WHERE {
+      ?dish :hasAllergen ?allerg .
+      BIND(STRAFTER(STR(?allerg), "#") AS ?allergenType)
+    }
+    GROUP BY ?dish
+  }
+}
+ORDER BY ?calories
+
+#This query returns all dishes that are compatible with the type of diet, allergies, and calorie limit imposed by the user.
+
+SELECT ?dishName ?calories
+WHERE {
+  :Menu :hasMeal ?dish .
+  BIND(STRAFTER(STR(?dish), "#") AS ?dishName)
+
+  ?dish :hasCaloriesValue ?cal .
+  ?cal :value ?calories .
+
+  ?dish :hasDietType ?dietType .
+  FILTER(STRAFTER(STR(?dietType), "#") = "Vegan")  
+  FILTER NOT EXISTS {
+    ?dish :hasAllergen ?allergene .
+    FILTER(STRAFTER(STR(?allergene), "#") = "Gluten") 
+  }
+  FILTER(xsd:integer(?calories) < 600)  
+}
+ORDER BY ?calories
+
+#This query contains all the dishes on the menu that are compatible with vegan users.
+
+SELECT ?dishName
+WHERE {
+  :Menu :hasMeal ?dish .
+  ?dish :hasDietType ?dietType .
+  FILTER(STRAFTER(STR(?dietType), "#") = "Vegan")  
+  BIND(STRAFTER(STR(?dish), "#") AS ?dishName)
+}
+
+#This query contains all dishes with calories less than 500
+
+SELECT ?dishName ?calories
+WHERE {
+  :Menu :hasMeal ?dish .
+  ?dish :hasCaloriesValue ?cal .
+  ?cal :value ?calories .
+  FILTER(xsd:integer(?calories) < 500)  
+  BIND(STRAFTER(STR(?dish), "#") AS ?dishName)
+}
+ORDER BY ?calories
+
+#This query contains all that do not contain gluten
+SELECT ?dishName
+WHERE {
+  :Menu :hasMeal ?dish .
+  BIND(STRAFTER(STR(?dish), "#") AS ?dishName)
+
+  FILTER NOT EXISTS {
+    ?dish :hasAllergen ?allergene .
+    FILTER(STRAFTER(STR(?allergene), "#") = "Gluten")  
+  }
+}
+
+#This query contains all the ingredients of the dish "SpaghettiAllaCarbonara"
+
+SELECT ?ingredientName
+WHERE {
+  :SpaghettiAllaCarbonara :hasIngredient ?ingredient .
+  BIND(STRAFTER(STR(?ingredient), "#") AS ?ingredientName)
+}

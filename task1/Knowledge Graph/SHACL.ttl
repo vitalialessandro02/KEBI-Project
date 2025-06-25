@@ -1,0 +1,80 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix : <http://example.org/restaurant-menu#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+
+# SHACL Shape for Menu 
+
+
+:MenuShape a sh:NodeShape ;
+  sh:targetClass :Menu ;
+
+  sh:property [
+    sh:path :hasMeal ;
+    sh:minCount 1 ;
+    sh:message "Each menu must have at least one associated dish." ;
+  ] .
+
+
+# SHACL Shape for Meal
+
+
+:MealShape a sh:NodeShape ;
+  sh:targetClass :Meal ;
+
+
+  sh:property [
+    sh:path :hasIngredient ;
+    sh:minCount 1 ;
+    sh:message "Each dish must have at least one ingredient." ;
+  ] ;
+
+
+  sh:property [
+    sh:path :hasCalories ;
+    sh:datatype xsd:integer ;
+    sh:minInclusive 0 ;
+    sh:maxInclusive 1500 ;
+    sh:message "Calories must be a positive number between 0 and 1500." ;
+  ] ;
+
+
+  sh:property [
+    sh:path :hasDietType ;
+    sh:class :DietType ;
+    sh:minCount 1 ;
+    sh:message "Each dish must have at least one type of diet associated with it." ;
+  ] ;
+
+
+  sh:property [
+    sh:path :hasAllergen ;
+    sh:class :Allergen ;
+    sh:minCount 0 ;
+    sh:message "Allergens must be valid instances of Allergen." ;
+  ] .
+
+
+
+# SHACL Shape for Guest
+
+
+:GuestShape a sh:NodeShape ;
+  sh:targetClass :Guest ;
+
+
+  sh:property [
+    sh:path :hasDietPreference ;
+    sh:class :DietType ;
+    sh:minCount 0 ;
+    sh:message "Dietary preferences must be instances of DietType." ;
+  ] ;
+
+
+  sh:property [
+    sh:path :hasAllergy ;
+    sh:class :Allergen ;
+    sh:minCount 0 ;
+    sh:message "Allergies must be valid instances of Allergen." ;
+  ] .
+
